@@ -347,38 +347,52 @@ const S={
 };
 
 // ---------- room ----------
-// Self-hosted transport: Server-Sent Events down, small JSON POSTs up.
-const MYID=(()=>{let v=null;try{v=sessionStorage.getItem('hs-id')}catch(e){}if(!v||!/^[a-z0-9]{6,32}$/.test(v)){v=Math.random().toString(36).slice(2,12)+Math.random().toString(36).slice(2,8);try{sessionStorage.setItem('hs-id',v)}catch(e){}}return v})();
-let LOBBY_ES=null,TABLE_ES=null;
-function openLobby(){if(LOBBY_ES)return;LOBBY_ES=new EventSource('/lobby');
-  LOBBY_ES.onopen=()=>{if(S.roomOK!==true){S.roomOK=true;if(S.screen==='home')render()}};
-  LOBBY_ES.onmessage=e=>{try{const d=JSON.parse(e.data);S.lobbyTables=d.tables||[];if(S.screen==='home')drawTables()}catch(err){}};
-  LOBBY_ES.onerror=()=>{if(S.roomOK!==false&&LOBBY_ES.readyState===2){S.roomOK=false;if(S.screen==='home')render()}};}
-function post(path,body){return fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),keepalive:true}).catch(()=>{})}
-openLobby();
+// Self-hosted transport: one Server-Sent Events stream per tab, small JSON POSTs up.
+// The id is fresh for every page load, so duplicated tabs are separate players.
+const MYID=Math.random().toString(36).slice(2,12)+Date.now().toString(36);
+let ES=null,MYP={};
+function post(path,body){return fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:MYID,...body})})
+  .then(async r=>{let d={};try{d=await r.json()}catch(e){}return r.ok?{ok:true,...d}:{ok:false,status:r.status,...d}}).catch(()=>({ok:false,code:'network'}))}
+function connect(){
+  ES=new EventSource('/stream?id='+MYID);
+  ES.onopen=()=>{const was=S.roomOK;S.roomOK=true;if(was!==true&&S.screen==='home')render();setConn(true)};
+  ES.onerror=()=>{setConn(false);if(ES.readyState===2){S.roomOK=false;if(S.screen==='home')render();setTimeout(connect,3000)}};
+  ES.onmessage=e=>{let d;try{d=JSON.parse(e.data)}catch(err){return}
+    if(d.type==='hello'){ // (re)connected: if the server lost our seat (restart, long drop), sit back down
+      if(S.table&&d.table!==S.code)post('/join',{t:S.code,reseat:true,presence:MYP});
+    }else if(d.type==='lobby'){S.lobbyTables=d.tables||[];if(S.screen==='home')drawTables()}
+    else if(d.type==='table'&&S.table&&d.code===S.code){
+      S.peers=(d.peers||[]).map(p=>({peer:p.id,presence:p.presence||{},sameTab:p.id===MYID,isMe:p.id===MYID}));sync()}};
+}
+let connTimer=null;
+function setConn(ok){clearTimeout(connTimer);const el=document.getElementById('conn');
+  if(ok){if(el)el.remove();return}
+  connTimer=setTimeout(()=>{if(!S.table||document.getElementById('conn'))return;const d=document.createElement('div');d.id='conn';d.textContent='Reconnecting…';
+    Object.assign(d.style,{position:'fixed',top:'calc(10px + env(safe-area-inset-top,0px))',left:'50%',transform:'translateX(-50%)',background:'var(--loss)',color:'#fff',padding:'6px 14px',borderRadius:'999px',fontWeight:600,zIndex:50,fontSize:'13px'});document.body.appendChild(d)},2000)}
+connect();
+window.addEventListener('pagehide',e=>{if(e.persisted)return;if(S.table)navigator.sendBeacon&&navigator.sendBeacon('/leave',new Blob([JSON.stringify({id:MYID})],{type:'application/json'}))});
 
 function players(){return S.peers.filter(p=>p.presence&&p.presence.nick).slice().sort((a,b)=>(a.presence.t||0)-(b.presence.t||0)||(a.peer<b.peer?-1:1))}
 function seated(){return players().slice(0,MAX_SEATS)}
 function me(){return S.peers.find(p=>p.sameTab)}
 let pChain=Promise.resolve();
-function setP(patch){if(!S.table)return;const code=S.code;pChain=pChain.then(()=>post('/presence',{t:code,id:MYID,patch}))}
+function setP(patch){if(!S.table)return;for(const[k,v]of Object.entries(patch)){if(v===null)delete MYP[k];else MYP[k]=v}
+  pChain=pChain.then(()=>post('/presence',{patch})).then(r=>{if(r&&!r.ok&&r.code==='no_seat'&&S.table)return post('/join',{t:S.code,reseat:true,presence:MYP})})}
 function advertise(){}
 
+let joining=false;
 async function enterTable(code,host){
-  S.code=code;S.isHost=host;S.joinT=Date.now();S.mode='online';S.peers=[];
-  await new Promise(res=>{let done=false;TABLE_ES=new EventSource('/events?t='+code+'&id='+MYID);
-    TABLE_ES.onmessage=e=>{let d;try{d=JSON.parse(e.data)}catch(err){return}
-      S.peers=(d.peers||[]).map(p=>({peer:p.id,presence:p.presence||{},sameTab:p.id===MYID,isMe:p.id===MYID}));
-      if(!done){done=true;res()}else sync()};
-    TABLE_ES.onerror=()=>{if(!done&&TABLE_ES.readyState===2){done=true;res()}}});
-  if(!TABLE_ES||TABLE_ES.readyState===2){toast('Could not join that table. Try again in a moment.');TABLE_ES=null;return}
-  S.table=true;
-  if(!host&&!S.peers.some(p=>p.presence&&p.presence.host)){/* nobody hosting yet: still join, host may arrive */}
-  const g=host?{phase:'setup',cfg:{...S.cfg},id:0}:null;S.game=g;
-  setP({nick:S.nick,t:S.joinT,host,game:g,locked:false,picks:null,prog:0});
-  S.screen='table';advertise();render();
+  if(joining)return;joining=true;
+  const g=host?{phase:'setup',cfg:{...S.cfg},id:0}:null;
+  const joinT=Date.now();const pres={nick:S.nick,t:joinT,host,game:g,locked:false,picks:null,prog:0};
+  let r=await post('/join',{t:code,create:host,presence:pres});
+  if(!r.ok&&r.code==='taken'&&host){const L='ABCDEFGHJKLMNPQRSTUVWXYZ';code='';for(let i=0;i<4;i++)code+=L[Math.floor(Math.random()*L.length)];r=await post('/join',{t:code,create:true,presence:pres})}
+  joining=false;
+  if(!r.ok){toast(r.error||(r.code==='network'?'Can\'t reach the game server. Check your connection.':'Could not join that table.'));return}
+  S.code=code;S.isHost=host;S.joinT=joinT;S.mode='online';S.peers=[];S.game=g;S.table=true;S.pickGameId=null;MYP={...pres};
+  S.screen='table';render();
 }
-function leaveTable(){if(S.table){post('/leave',{t:S.code,id:MYID});if(TABLE_ES)TABLE_ES.close();TABLE_ES=null}S.table=null;S.isHost=false;S.code=null;S.game=null;S.peers=[];stopReveal();advertise();S.screen='home';S.mode=null;render()}
+function leaveTable(){if(S.table)post('/leave',{});S.table=null;MYP={};S.isHost=false;S.code=null;S.game=null;S.lastGame=null;S.peers=[];stopReveal();S.screen='home';S.mode=null;render()}
 
 function sync(){
   const ps=players();const mine=me();
@@ -490,7 +504,7 @@ function renderTable(){
     <div class="panel stack">
       <span class="eyebrow">${S.isHost?'Game settings':'Waiting for the host to deal'}</span>
       ${settingsHTML(cfg,S.isHost)}
-      ${S.isHost?`<button class="btn primary" id="deal">Deal the cards</button>`:`<p class="muted" style="margin:0">The host picks the settings and deals. You'll all get the same years and the same lucky cards.</p>`}
+      ${S.isHost?`<button class="btn primary" id="deal">Deal the cards</button>`:`<p class="muted" style="margin:0">${ps.some(p=>p.presence.host)?"The host picks the settings and deals. You'll all get the same years and the same lucky cards.":'Nobody is hosting this table yet. Ask the person who created it to come back, or create your own table.'}</p>`}
     </div>
   </div>`;
   app.querySelector('#leave').onclick=leaveTable;

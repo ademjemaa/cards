@@ -66,12 +66,14 @@ location / {
 
 ## How multiplayer works
 
-`server.js` is a small presence relay with no dependencies:
+`server.js` is a small presence relay with no dependencies. Each browser tab holds exactly one live connection, so many tabs on one computer still work (browsers cap a site at 6 connections).
 
-- `GET /lobby`: event stream of open tables.
-- `GET /events?t=CODE&id=PLAYER`: event stream of everyone at a table and their state.
-- `POST /presence {t, id, patch}`: merges a player's state and broadcasts it.
-- `POST /leave {t, id}`: leaves a table.
+- `GET /stream?id=TAB`: event stream carrying the open-tables list and the state of the tab's table.
+- `POST /join {id, t, create?, presence}`: sit at a table. Joining a code that doesn't exist returns "No table with that code".
+- `POST /presence {id, patch}`: merge a player's state and broadcast it.
+- `POST /leave {id}`: leave the table.
+
+Every tab gets a fresh id on page load, so duplicated tabs are separate players. If the connection drops or the server restarts, tabs reconnect and sit back down at their table automatically.
 
 All game logic runs in the browser. The host's state carries the game (seed, start year, lucky cards, phase). Each player's state carries their name, lock status and picks. When everyone is locked, the host flips the phase to `reveal` and every browser plays the same animation from the same data. A player who drops off is removed after 15 seconds, and if the host leaves, the next player in join order takes over.
 
