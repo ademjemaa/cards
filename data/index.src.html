@@ -275,6 +275,7 @@ input[type=text]:focus,select:focus{border-color:var(--amber);outline:none}
   </defs>
 </svg>
 
+<script src="/socket.io/socket.io.js"></script>
 <script>
 const DATA=/*DATA*/;
 </script>
@@ -347,22 +348,25 @@ const S={
 };
 
 // ---------- room ----------
-// Self-hosted transport: one Server-Sent Events stream per tab, small JSON POSTs up.
-// The id is fresh for every page load, so duplicated tabs are separate players.
+// Self-hosted transport: one socket.io connection per tab (WebSocket, or HTTP polling when
+// something on the network blocks streaming). The id is fresh for every page load, so duplicated
+// tabs are separate players.
 const MYID=Math.random().toString(36).slice(2,12)+Date.now().toString(36);
-let ES=null,MYP={};
-function post(path,body){return fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:MYID,...body})})
-  .then(async r=>{let d={};try{d=await r.json()}catch(e){}return r.ok?{ok:true,...d}:{ok:false,status:r.status,...d}}).catch(()=>({ok:false,code:'network'}))}
+let SOCK=null,MYP={};
+function post(path,body){const ev=path.replace('/','');
+  return new Promise(res=>{if(!SOCK||!SOCK.connected)return res({ok:false,code:'network'});
+    SOCK.timeout(8000).emit(ev,body||{},(err,r)=>res(err?{ok:false,code:'network'}:(r||{ok:false})))})}
 function connect(){
-  ES=new EventSource('/stream?id='+MYID);
-  ES.onopen=()=>{const was=S.roomOK;S.roomOK=true;if(was!==true&&S.screen==='home')render();setConn(true)};
-  ES.onerror=()=>{setConn(false);if(ES.readyState===2){S.roomOK=false;if(S.screen==='home')render();setTimeout(connect,3000)}};
-  ES.onmessage=e=>{let d;try{d=JSON.parse(e.data)}catch(err){return}
-    if(d.type==='hello'){ // (re)connected: if the server lost our seat (restart, long drop), sit back down
-      if(S.table&&d.table!==S.code)post('/join',{t:S.code,reseat:true,presence:MYP});
-    }else if(d.type==='lobby'){S.lobbyTables=d.tables||[];if(S.screen==='home')drawTables()}
-    else if(d.type==='table'&&S.table&&d.code===S.code){
-      S.peers=(d.peers||[]).map(p=>({peer:p.id,presence:p.presence||{},sameTab:p.id===MYID,isMe:p.id===MYID}));sync()}};
+  if(typeof io!=='function'){S.roomOK=false;return}
+  SOCK=io({auth:{id:MYID},reconnectionDelayMax:4000});
+  SOCK.on('connect',()=>{const was=S.roomOK;S.roomOK=true;if(was!==true&&S.screen==='home')render();setConn(true)});
+  SOCK.on('disconnect',()=>setConn(false));
+  SOCK.on('connect_error',()=>{if(S.roomOK!==false){S.roomOK=false;if(S.screen==='home')render()}setConn(false)});
+  SOCK.on('hello',d=>{ // (re)connected: if the server lost our seat (restart, long drop), sit back down
+    if(S.table&&d.table!==S.code)post('/join',{t:S.code,reseat:true,presence:MYP})});
+  SOCK.on('lobby',d=>{S.lobbyTables=d.tables||[];if(S.screen==='home')drawTables()});
+  SOCK.on('table',d=>{if(!S.table||d.code!==S.code)return;
+    S.peers=(d.peers||[]).map(p=>({peer:p.id,presence:p.presence||{},sameTab:p.id===MYID,isMe:p.id===MYID}));sync()});
 }
 let connTimer=null;
 function setConn(ok){clearTimeout(connTimer);const el=document.getElementById('conn');
@@ -370,7 +374,7 @@ function setConn(ok){clearTimeout(connTimer);const el=document.getElementById('c
   connTimer=setTimeout(()=>{if(!S.table||document.getElementById('conn'))return;const d=document.createElement('div');d.id='conn';d.textContent='Reconnecting…';
     Object.assign(d.style,{position:'fixed',top:'calc(10px + env(safe-area-inset-top,0px))',left:'50%',transform:'translateX(-50%)',background:'var(--loss)',color:'#fff',padding:'6px 14px',borderRadius:'999px',fontWeight:600,zIndex:50,fontSize:'13px'});document.body.appendChild(d)},2000)}
 connect();
-window.addEventListener('pagehide',e=>{if(e.persisted)return;if(S.table)navigator.sendBeacon&&navigator.sendBeacon('/leave',new Blob([JSON.stringify({id:MYID})],{type:'application/json'}))});
+window.addEventListener('pagehide',e=>{if(e.persisted)return;if(S.table&&SOCK&&SOCK.connected)SOCK.emit('leave',{})});
 
 function players(){return S.peers.filter(p=>p.presence&&p.presence.nick).slice().sort((a,b)=>(a.presence.t||0)-(b.presence.t||0)||(a.peer<b.peer?-1:1))}
 function seated(){return players().slice(0,MAX_SEATS)}
