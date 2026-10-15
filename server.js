@@ -9,6 +9,8 @@ const crypto = require('crypto');
 const PORT = +process.env.PORT || 3000;
 const HTML = fs.readFileSync(path.join(__dirname, 'public', 'index.html'));
 const HTML_GZ = zlib.gzipSync(HTML);
+const SERIES = fs.readFileSync(path.join(__dirname, 'public', 'series.json'));
+const SERIES_GZ = zlib.gzipSync(SERIES);
 const MAX_PRESENCE = 8192;
 const GRACE_MS = 15000;
 
@@ -80,6 +82,11 @@ const server = http.createServer(async (req, res) => {
       const gz = /\bgzip\b/.test(req.headers['accept-encoding'] || '');
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache', ...(gz ? { 'Content-Encoding': 'gzip' } : {}) });
       return res.end(gz ? HTML_GZ : HTML);
+    }
+    if (req.method === 'GET' && u.pathname === '/series.json') {
+      const gz = /\bgzip\b/.test(req.headers['accept-encoding'] || '');
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=3600', ...(gz ? { 'Content-Encoding': 'gzip' } : {}) });
+      return res.end(gz ? SERIES_GZ : SERIES);
     }
     if (req.method === 'GET' && u.pathname === '/lobby') {
       sse(res); lobbyConns.add(res); send(res, { tables: lobbyList() });
