@@ -21,6 +21,7 @@ const MAX_SEATS_PER_TABLE = 24;
 
 const clients = new Map();   // tab id -> { socks:Set, table:code|null, goneAt }
 const tables = new Map();    // code -> Map(tab id -> presence)
+const ctls = new Map();      // code -> reveal timeline {id, t0, changes:[{at, speed}], skipAt}, stamped with this server's clock
 
 const okCode = c => /^[A-Z]{4}$/.test(c || '');
 const okId = i => /^[a-z0-9]{6,40}$/.test(i || '');
@@ -41,7 +42,7 @@ const server = http.createServer((req, res) => {
 const io = new Server(server, { pingInterval: 10000, pingTimeout: 8000, maxHttpBufferSize: 64 * 1024 });
 
 function emitTo(id, ev, data) { const c = clients.get(id); if (c) for (const s of c.socks) s.emit(ev, data); }
-function tableMsg(code) { const t = tables.get(code); return { code, peers: t ? [...t].map(([id, presence]) => ({ id, presence })) : [] }; }
+function tableMsg(code) { const t = tables.get(code); return { code, ctl: ctls.get(code) || null, peers: t ? [...t].map(([id, presence]) => ({ id, presence })) : [] }; }
 function pushTable(code) { const t = tables.get(code); if (!t) return; const m = tableMsg(code); for (const id of t.keys()) emitTo(id, 'table', m); scheduleLobby(); }
 function lobbyList() {
   const out = [];
@@ -60,7 +61,7 @@ function removeFromTable(id) {
   const code = c.table, t = tables.get(code); c.table = null;
   if (!t) return;
   t.delete(id);
-  if (!t.size) { tables.delete(code); log('table closed', code); scheduleLobby(); } else pushTable(code);
+  if (!t.size) { tables.delete(code); ctls.delete(code); log('table closed', code); scheduleLobby(); } else pushTable(code);
 }
 setInterval(() => { // drop tabs that have been gone longer than the grace period
   const now = Date.now();
@@ -106,6 +107,18 @@ io.on('connection', sock => {
     if (tooBig(p)) return reply(ack, { ok: false, code: 'too_big', error: 'Too much data.' });
     t.set(id, p); pushTable(c.table);
     reply(ack, { ok: true });
+  });
+  sock.on('clock', (_b, ack) => reply(ack, { now: Date.now() }));
+  // Reveal control. Anyone at the table can start the reveal for the current game (first request wins),
+  // change the speed for everyone, or skip everyone to the results.
+  sock.on('ctl', (b, ack) => {
+    b = b || {}; const code = c.table; if (!code || !tables.has(code)) return reply(ack, { ok: false });
+    const now = Date.now(); let ctl = ctls.get(code);
+    if (b.type === 'start') { if (!ctl || ctl.id !== b.gameId) { ctl = { id: b.gameId, t0: now + 2500, changes: [], skipAt: 0 }; ctls.set(code, ctl); } }
+    else if (!ctl || ctl.id !== b.gameId) return reply(ack, { ok: false });
+    else if (b.type === 'speed' && [1, 2, 4].includes(b.speed) && ctl.changes.length < 100) ctl.changes.push({ at: Math.max(now, ctl.t0), speed: b.speed });
+    else if (b.type === 'skip' && !ctl.skipAt) ctl.skipAt = now;
+    pushTable(code); reply(ack, { ok: true });
   });
   sock.on('leave', (_b, ack) => { removeFromTable(id); reply(ack, { ok: true }); });
   sock.on('disconnect', () => { c.socks.delete(sock); if (!c.socks.size) c.goneAt = Date.now(); });

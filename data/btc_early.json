@@ -1,0 +1,3 @@
+{"source":"blockchain.com market-price (daily USD close, mostly Mt. Gox era)","first":"2010-08-18",
+"yearly":{"2010":[0.07,0.3,0.06,0.47,136],"2011":[0.3,4.47,0.3,33.8,365],"2012":[5.04,13.57,4.38,15.37,366],"2013":[13.58,736.5,13.42,1136.9,365],"2014":[732,311,369,670.14,365]},
+"paths":{"2010":[0.06,0.47,"CCCAAOAAAJJIUW_liiaaaddl","Fm"],"2011":[0.3,33.8,"AABBBBBCGMpecbTUMKHGFEGI","Ac"],"2012":[4.38,15.37,"EQICCFDFEEHNOarknutknu21","Jo"],"2013":[13.42,1136.9,"AAABBDHGGGFFEFFGGGGLV4vp","A7"],"2014":[311,817.15,"0__ntiTXQbrjnkjYVMJGOIGA","Rb"]}}

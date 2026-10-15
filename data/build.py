@@ -90,6 +90,9 @@ for t, e in y.items():
     if t == 'SU': yy.pop(1993, None)
     if t == 'ZARUSD=X': yy.pop(2006, None)
     if t == 'LE=F': yy = merge(yy, FR('WPU0131'))
+    if t == 'BTC-USD':  # Yahoo starts mid-September 2014; earlier years from blockchain.com
+        E = J('btc_early.json')
+        yy = merge({int(k): (v[:4], E['paths'][k]) for k, v in E['yearly'].items()}, yy)
     assets.append({'id': t, 'name': n, 'cat': c, 'y': yy})
 for k in w:
     n = k[3:]
@@ -103,6 +106,22 @@ for k in w:
 for k, n, c in [('WPU081', 'Lumber (US)', 'Materials'), ('WPU101', 'Steel (US)', 'Metals'), ('WPU0113', 'Fresh Vegetables (US)', 'Agriculture'),
                 ('WPU091', 'Paper & Pulp (US)', 'Materials'), ('WPU0223', 'Seafood (US)', 'Agriculture')]:
     assets.append({'id': k.lower(), 'name': n, 'cat': c, 'y': FR(k)})
+
+# International and extra US stocks (Yahoo daily, home-market listings, prices in local currency).
+MORE, MORE_NAMES = J('more_stocks_data.json'), J('more_stocks.json')
+MORE_DROP = {('BA.L', y) for y in (1995, 1996, 1997, 1998)} | {('LOGN.SW', 2001)}
+for t, e in MORE.items():
+    yy = {}
+    for k, v in e['y'].items():
+        yr = int(k)
+        if not (MIN_YEAR <= yr <= MAX_YEAR) or (t, yr) in MORE_DROP: continue
+        a, b, c, d = v[:4]
+        if d / c > 15 and b / a < 3: c, d = min(a, b), max(a, b)   # bad intraday tick (e.g. pence/pound mix-ups)
+        yy[yr] = ([a, b, c, d], e['p'].get(k))
+    if yy: assets.append({'id': t, 'name': MORE_NAMES.get(t) or e['meta']['name'], 'cat': 'Stocks', 'y': yy})
+ALIASES.update({'VOW3.DE': 'vw volkswagen', 'MBG.DE': 'daimler benz mercedes', 'BMW.DE': 'bmw', '7203.T': 'toyota', '005930.KS': 'samsung', '9984.T': 'softbank',
+                'AIR.PA': 'airbus', 'RMS.PA': 'hermes', 'OR.PA': 'loreal', 'ITX.MC': 'zara inditex', '9983.T': 'uniqlo', 'CFR.SW': 'cartier richemont', '1211.HK': 'byd',
+                '2317.TW': 'foxconn', 'BRK-B': 'berkshire buffett', '7974.T': 'nintendo', '6758.T': 'sony', 'RACE': 'ferrari'})
 
 order = ['Stocks', 'ETFs', 'Indices', 'Metals', 'Energy', 'Agriculture', 'Materials', 'Crypto', 'Currencies']
 assets = [a for a in assets if a['y']]

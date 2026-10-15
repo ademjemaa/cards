@@ -69,7 +69,7 @@ input[type=text]:focus,select:focus{border-color:var(--amber);outline:none}
 
 /* cards */
 .card{width:var(--cw);height:var(--ch);flex:0 0 auto;position:relative;perspective:800px}
-.card .in{position:absolute;inset:0;transition:transform .55s cubic-bezier(.3,.7,.3,1);transform-style:preserve-3d}
+.card .in{position:absolute;inset:0;transition:transform calc(.55s / var(--rv-speed,1)) cubic-bezier(.3,.7,.3,1);transform-style:preserve-3d}
 .card.open .in{transform:rotateY(180deg)}
 .face{position:absolute;inset:0;border-radius:8px;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden;display:flex;flex-direction:column;padding:9px 10px;color:var(--ink);background:var(--paper);box-shadow:0 1px 0 #fff8 inset,0 6px 14px #0007}
 .face.back{background:repeating-linear-gradient(135deg,#2a2e35 0 6px,#252930 6px 12px);color:var(--text);border:1px solid #3a3f48;align-items:center;justify-content:center;text-align:center}
@@ -121,6 +121,7 @@ input[type=text]:focus,select:focus{border-color:var(--amber);outline:none}
 .cat{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--board);border-radius:999px;padding:6px 12px;font-size:13px;white-space:nowrap;cursor:pointer;min-height:34px;line-height:1.2}
 .cat .n{font-family:var(--mono);font-size:10px;color:var(--muted)}
 .cat.on{background:var(--amber);color:#1b1306;border-color:var(--amber)}
+.cat[disabled]{opacity:.35;cursor:default}
 .cat.on .n{color:#5a3a06}
 .list{flex:1 1 auto;overflow-y:auto;min-height:0;display:flex;flex-direction:column;gap:2px;margin-inline:-6px;padding-inline:6px;overscroll-behavior:contain}
 .opt{flex:0 0 auto;display:flex;justify-content:space-between;gap:12px;align-items:center;background:none;border:0;border-radius:6px;padding:10px;text-align:left;cursor:pointer;min-height:46px;line-height:1.3;width:100%}
@@ -133,6 +134,20 @@ input[type=text]:focus,select:focus{border-color:var(--amber);outline:none}
 .list.grid .opt.sel{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber) inset}
 .list.grid .opt .nm{flex:0 0 auto;font-weight:600;font-size:14px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .list.grid .opt .c{margin-top:auto;text-align:left;white-space:normal;overflow-wrap:anywhere}
+.pk-years{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;flex:0 0 auto;scrollbar-width:thin}
+.yt{flex:0 0 auto;display:grid;gap:1px;justify-items:center;min-width:54px;padding:5px 8px;border-radius:6px;border:1px solid var(--line);background:var(--board);cursor:pointer;line-height:1.1}
+.yt b{font-family:var(--display);font-size:16px;font-weight:800}
+.yt span{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.yt.set span{color:var(--gain)}
+.yt.lk{background-image:linear-gradient(115deg,#ffd9f233,#c8f1ff33,#fff3c133)}
+.yt.on{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber) inset}
+.yt.on b{color:var(--amber)}
+#pk-year.bump{animation:bump .25s ease-out}
+@keyframes bump{from{transform:translateY(-6px);opacity:.3}}
+.opt{position:relative}
+.opt.last{box-shadow:inset 0 0 0 1px #4fc3f7}
+.lasttag{position:absolute;top:8px;right:8px;font-family:var(--mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:#4fc3f7}
+.list.list .lasttag{position:static;margin-left:8px}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
 .seg button{background:var(--board);border:0;padding:0 10px;min-height:34px;min-width:38px;color:var(--muted);cursor:pointer;display:grid;place-items:center}
 .seg button.on{background:var(--flap);color:var(--amber)}
@@ -153,9 +168,9 @@ input[type=text]:focus,select:focus{border-color:var(--amber);outline:none}
 .lane-h .amt{font-family:var(--mono);font-size:22px;font-weight:600;color:var(--amber);font-variant-numeric:tabular-nums}
 .strip{overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;padding-bottom:10px}
 .track{position:relative;display:flex;gap:var(--gap);padding-top:var(--bagh);width:max-content;padding-right:40vw}
-.bag{position:absolute;top:0;left:0;width:var(--cw);height:var(--bagh);display:flex;flex-direction:column;align-items:center;justify-content:flex-end;transition:left .6s cubic-bezier(.45,0,.25,1);z-index:3;pointer-events:none}
+.bag{position:absolute;top:0;left:0;width:var(--cw);height:var(--bagh);display:flex;flex-direction:column;align-items:center;justify-content:flex-end;transition:left calc(.6s / var(--rv-speed,1)) cubic-bezier(.45,0,.25,1);z-index:3;pointer-events:none}
 .bag .body{width:74px;height:74px;transform-origin:50% 100%}
-.bag.hop .body{animation:hop .6s cubic-bezier(.3,.6,.3,1)}
+.bag.hop .body{animation:hop calc(.6s / var(--rv-speed,1)) cubic-bezier(.3,.6,.3,1)}
 @keyframes hop{0%{transform:translateY(0) scale(1,1)}15%{transform:translateY(0) scale(1.12,.86)}50%{transform:translateY(-34px) scale(.95,1.06)}85%{transform:translateY(0) scale(1.1,.9)}100%{transform:none}}
 .bag.morph .body{animation:morph .7s cubic-bezier(.2,1.7,.4,1)}
 @keyframes morph{0%{transform:scale(.4);filter:brightness(2.4)}100%{transform:scale(1)}}
@@ -359,13 +374,13 @@ function post(path,body){const ev=path.replace('/','');
 function connect(){
   if(typeof io!=='function'){S.roomOK=false;return}
   SOCK=io({auth:{id:MYID},reconnectionDelayMax:4000});
-  SOCK.on('connect',()=>{const was=S.roomOK;S.roomOK=true;if(was!==true&&S.screen==='home')render();setConn(true)});
+  SOCK.on('connect',()=>{syncClock();const was=S.roomOK;S.roomOK=true;if(was!==true&&S.screen==='home')render();setConn(true)});
   SOCK.on('disconnect',()=>setConn(false));
   SOCK.on('connect_error',()=>{if(S.roomOK!==false){S.roomOK=false;if(S.screen==='home')render()}setConn(false)});
   SOCK.on('hello',d=>{ // (re)connected: if the server lost our seat (restart, long drop), sit back down
     if(S.table&&d.table!==S.code)post('/join',{t:S.code,reseat:true,presence:MYP})});
   SOCK.on('lobby',d=>{S.lobbyTables=d.tables||[];if(S.screen==='home')drawTables()});
-  SOCK.on('table',d=>{if(!S.table||d.code!==S.code)return;
+  SOCK.on('table',d=>{if(!S.table||d.code!==S.code)return;S.ctl=d.ctl||null;
     S.peers=(d.peers||[]).map(p=>({peer:p.id,presence:p.presence||{},sameTab:p.id===MYID,isMe:p.id===MYID}));sync()});
 }
 let connTimer=null;
@@ -396,6 +411,7 @@ async function enterTable(code,host){
   S.code=code;S.isHost=host;S.joinT=joinT;S.mode='online';S.peers=[];S.game=g;S.table=true;S.pickGameId=null;MYP={...pres};
   S.screen='table';render();
 }
+function backToTable(){if(S.game)S.leftReveal=S.game.id;stopReveal();S.screen='table';render()}
 function leaveTable(){if(S.table)post('/leave',{});S.table=null;MYP={};S.isHost=false;S.code=null;S.game=null;S.lastGame=null;S.peers=[];stopReveal();S.screen='home';S.mode=null;render()}
 
 function sync(){
@@ -410,17 +426,17 @@ function sync(){
     const prev=S.game;S.game=hostG;S.lastGame=hostG;
     if(hostG.phase==='picking'&&S.pickGameId!==hostG.id){S.pickGameId=hostG.id;S.picks=Array(hostG.n).fill(null);S.locked=false;S.pickIdx=0;stopReveal();setP({locked:false,picks:null,prog:0});S.screen='pick'}
     if(hostG.phase==='setup'&&S.screen!=='table'){stopReveal();S.screen='table'}
-    if(hostG.phase==='reveal'&&(!S.reveal||S.reveal.id!==hostG.id))startReveal(onlineRoster(hostG),hostG);
+    if(hostG.phase==='reveal'&&S.leftReveal!==hostG.id){if(!S.ctl||S.ctl.id!==hostG.id){if(S.ctlAsked!==hostG.id){S.ctlAsked=hostG.id;sendCtl(hostG,'start')}}else if(!S.reveal||S.reveal.id!==hostG.id)startReveal(onlineRoster(hostG),hostG)}
   }
   // host: everyone locked -> reveal
   if(S.isHost&&S.game&&S.game.phase==='picking'){
-    const seats=seated();const locked=seats.filter(p=>p.presence.locked&&Array.isArray(p.presence.picks)&&p.presence.picks.length===S.game.n);
-    if(seats.length&&locked.length===seats.length){S.game={...S.game,phase:'reveal',revealAt:Date.now()+2200};setP({game:S.game});advertise();startReveal(onlineRoster(S.game),S.game)}
+    const seats=seated();const locked=seats.filter(p=>p.presence.locked&&p.presence.pickFor===S.game.id&&Array.isArray(p.presence.picks)&&p.presence.picks.length===S.game.n);
+    if(seats.length&&locked.length===seats.length){S.game={...S.game,phase:'reveal'};setP({game:S.game});advertise();sendCtl(S.game,'start')}
   }
   if(S.isHost)advertise();
   if(['table','pick'].includes(S.screen))render();
 }
-function onlineRoster(g){return seated().filter(p=>p.presence.locked&&Array.isArray(p.presence.picks)&&p.presence.picks.length===g.n).map((p,i)=>({nick:p.presence.nick,color:COLORS[i%COLORS.length],picks:p.presence.picks,me:!!p.sameTab}))}
+function onlineRoster(g){return seated().filter(p=>p.presence.locked&&p.presence.pickFor===g.id&&Array.isArray(p.presence.picks)&&p.presence.picks.length===g.n).map((p,i)=>({nick:p.presence.nick,color:COLORS[i%COLORS.length],picks:p.presence.picks,me:!!p.sameTab}))}
 
 // ---------- toasts ----------
 function toast(msg){const t=document.createElement('div');t.textContent=msg;t.setAttribute('role','status');
@@ -461,7 +477,7 @@ function renderHome(){
   <section class="rules">
     <div><h3>Normal year</h3><p>Your money buys in at the asset's first price of the year and sells at its last. That multiplier carries into next year.</p></div>
     <div><h3>Lucky year</h3><p>Everyone gets the same lucky years. On those, you buy at the year's best low and sell at the highest point after it.</p></div>
-    <div><h3>Fail</h3><p>Picked something that wasn't trading that year? Your money skips the year untouched and the card gets stamped FAIL. Nobody warns you.</p></div>
+    <div><h3>Only what existed</h3><p>Each year's list only shows what was trading that year: no Bitcoin in 1990, no Facebook before 2012. Hold cash is always there if nothing tempts you.</p></div>
   </section>
   <p class="foot">Prices: Yahoo Finance daily data (stocks from 1962, indices, futures, crypto, FX), World Bank Pink Sheet monthly commodity prices (from 1960) and US producer price indexes from FRED for 1950s commodities. Stock prices are split-adjusted; dividends are not included. ${ASSETS.length} assets.</p>`;
   const nick=app.querySelector('#nick');
@@ -547,7 +563,7 @@ function renderPick(){
   const g=S.game;if(!g)return;
   const done=S.picks.filter(Boolean).length;
   let others='';
-  if(S.mode==='online')others=seated().map((p,i)=>{const pr=p.presence;const tag=pr.locked?'locked':`${pr.prog||0}/${g.n}`;return `<span class="chip ${pr.locked?'on':''}"><span class="dot" style="background:${COLORS[i%8]}"></span>${esc(pr.nick)}${p.sameTab?' (you)':''} · ${tag}</span>`}).join('');
+  if(S.mode==='online')others=seated().map((p,i)=>{const pr=p.presence;const lk=pr.locked&&pr.pickFor===g.id;const tag=lk?'locked':`${pr.prog||0}/${g.n}`;return `<span class="chip ${lk?'on':''}"><span class="dot" style="background:${COLORS[i%8]}"></span>${esc(pr.nick)}${p.sameTab?' (you)':''} · ${tag}</span>`}).join('');
   else{const p=S.local.players[S.local.turn];others=`<span class="chip"><span class="dot" style="background:${p.color}"></span>${esc(p.nick)} picking · ${S.local.turn+1}/${S.local.players.length}</span>`}
   app.innerHTML=`<div class="statusbar">
     <div class="row"><span class="mono" style="font-size:13px">${g.start} start · ${g.n} years · ${g.lucky.split('').filter(c=>c==='1').length} lucky</span><div class="chips">${others}</div></div>
@@ -566,10 +582,10 @@ function renderPick(){
 function progress(){if(S.mode==='online')setP({prog:S.picks.filter(Boolean).length})}
 function lockIn(){
   if(S.picks.some(x=>!x))return;
-  if(S.mode==='online'){S.locked=true;setP({locked:true,picks:S.picks.slice(),prog:S.game.n});render();sync();return}
+  if(S.mode==='online'){S.locked=true;setP({locked:true,picks:S.picks.slice(),pickFor:S.game.id,prog:S.game.n});render();sync();return}
   const L=S.local;L.players[L.turn].picks=S.picks.slice();L.turn++;
   if(L.turn<L.players.length){S.screen='handoff';render()}
-  else startReveal(L.players.map(p=>({nick:p.nick,color:p.color,picks:p.picks,me:false})),{...S.game,revealAt:Date.now()+400});
+  else{S.ctlLocal={id:S.game.id,t0:Date.now()+400,changes:[],skipAt:0};startReveal(L.players.map(p=>({nick:p.nick,color:p.color,picks:p.picks,me:false})),S.game)}
 }
 
 // ---------- icons ----------
@@ -645,63 +661,127 @@ function searchAssets(q){
 const GRID_ICO='<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor"/></svg>';
 const LIST_ICO='<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="1" y="2" width="14" height="2.5" rx="1.2" fill="currentColor"/><rect x="1" y="6.75" width="14" height="2.5" rx="1.2" fill="currentColor"/><rect x="1" y="11.5" width="14" height="2.5" rx="1.2" fill="currentColor"/></svg>';
 function openPicker(i){
-  closePicker();const g=S.game,year=yearOf(g,i),lucky=g.lucky[i]==='1';
+  closePicker();const g=S.game;
   const bg=document.createElement('div');bg.className='sheet-bg';
-  bg.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-label="Pick for ${year}">
-    <header><div><span class="eyebrow">${lucky?'Lucky year · best entry and exit':'Bet your fortune on'}</span><h3>${year}</h3></div>
-      <div class="row" style="gap:8px;flex-wrap:nowrap"><div class="seg" role="group" aria-label="View"><button data-v="grid" class="${S.view==='grid'?'on':''}" aria-pressed="${S.view==='grid'}" title="Grid">${GRID_ICO}</button><button data-v="list" class="${S.view==='list'?'on':''}" aria-pressed="${S.view==='list'}" title="List">${LIST_ICO}</button></div><button class="btn ghost small" id="pk-close">Close</button></div></header>
+  bg.innerHTML=`<div class="sheet" role="dialog" aria-modal="true">
+    <header><div style="min-width:0"><span class="eyebrow" id="pk-eb"></span><div class="row" style="gap:10px;flex-wrap:nowrap"><button class="btn ghost small" id="pk-prev" aria-label="Previous year">‹</button><h3 id="pk-year"></h3><button class="btn ghost small" id="pk-next" aria-label="Next year">›</button></div></div>
+      <div class="row" style="gap:8px;flex-wrap:nowrap"><div class="seg" role="group" aria-label="View"><button data-v="grid" class="${S.view==='grid'?'on':''}" aria-pressed="${S.view==='grid'}" title="Grid">${GRID_ICO}</button><button data-v="list" class="${S.view==='list'?'on':''}" aria-pressed="${S.view==='list'}" title="List">${LIST_ICO}</button></div><button class="btn ghost small" id="pk-close">Done</button></div></header>
+    <div class="pk-years" id="pk-years"></div>
     <input type="text" id="pk-q" placeholder="Search: S&P 500, Apple, gold, corn, Bitcoin…" autocomplete="off">
-    <div class="cats" role="tablist">${CATS.map(c=>`<button class="cat ${S.catSel===c?'on':''}" data-c="${c}" role="tab" aria-selected="${S.catSel===c}">${c}<span class="n">${c==='Popular'?POPULAR.length:c==='All'?ASSETS.length:CAT_COUNT[c]||0}</span></button>`).join('')}</div>
+    <div class="cats" role="tablist" id="pk-cats"></div>
     <div class="list" id="pk-list"></div></div>`;
   document.body.appendChild(bg);pickerEl=bg;
-  const q=bg.querySelector('#pk-q'),list=bg.querySelector('#pk-list'),catsEl=bg.querySelector('.cats');
-  const draw=()=>{const s=q.value.trim();
+  const q=bg.querySelector('#pk-q'),list=bg.querySelector('#pk-list'),catsEl=bg.querySelector('#pk-cats');
+  q.value=S.pkQuery||'';
+  let cur=i,AVAIL=[],OK=new Set();
+  const label=a=>a.id==='cash'?'no risk · ×1':esc(tickerLabel(a))+(a.cat!==tickerLabel(a)?' · '+esc(a.cat):'');
+  const drawYears=()=>{bg.querySelector('#pk-years').innerHTML=S.picks.map((id,k)=>{const a=id&&BY_ID[id];return `<button class="yt ${k===cur?'on':''} ${a?'set':''} ${g.lucky[k]==='1'?'lk':''}" data-k="${k}" title="${a?esc(a.name):'not picked'}"><b>${yearOf(g,k)}</b><span>${a?esc(a.id==='cash'?'Cash':tickerLabel(a).replace(/[^A-Z0-9]/gi,'').slice(0,5)):'—'}</span></button>`}).join('');
+    bg.querySelectorAll('.yt').forEach(b=>b.onclick=()=>setCard(+b.dataset.k,true));
+    const on=bg.querySelector('.yt.on');if(on)on.scrollIntoView({block:'nearest',inline:'center'})};
+  const draw=(keepId)=>{const s=q.value.trim();S.pkQuery=q.value;const year=yearOf(g,cur);
+    // remember where the anchor tile sits on screen so the list can be put back under the finger
+    let anchorOff=null;if(keepId){const el=list.querySelector(`.opt[data-id="${CSS.escape(keepId)}"]`);if(el)anchorOff=el.offsetTop-list.scrollTop}
+    const prevTop=list.scrollTop;
     catsEl.classList.toggle('dim',!!s);
     let items;
-    if(s)items=searchAssets(s);
-    else if(S.catSel==='Popular')items=[BY_ID.cash,...POPULAR.map(id=>BY_ID[id])];
-    else if(S.catSel==='All')items=[BY_ID.cash,...ASSETS];
-    else items=ASSETS.filter(a=>a.cat===S.catSel);
+    if(s)items=searchAssets(s).filter(a=>OK.has(a.id));
+    else if(S.catSel==='Popular')items=[BY_ID.cash,...POPULAR.filter(id=>OK.has(id)).map(id=>BY_ID[id])];
+    else if(S.catSel==='All')items=[BY_ID.cash,...AVAIL];
+    else items=AVAIL.filter(a=>a.cat===S.catSel);
+    const last=cur>0?S.picks[cur-1]:null;
     list.className='list '+S.view;
-    list.innerHTML=items.map(a=>`<button class="opt ${S.picks[i]===a.id?'sel':''}" data-id="${esc(a.id)}">${iconSVG(a,S.view==='grid'?40:32)}<span class="nm">${esc(a.name)}</span><span class="c">${a.id==='cash'?'no risk · ×1':esc(tickerLabel(a))+(a.cat!==tickerLabel(a)?' · '+esc(a.cat):'')}</span></button>`).join('')||`<p class="muted" style="padding:10px;margin:0">Nothing matches “${esc(s)}”. Try a company, a ticker or a commodity.</p>`;
-    list.scrollTop=0;
-    list.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{S.picks[i]=b.dataset.id;progress();closePicker();
-      const next=S.picks.findIndex((x,k)=>!x&&k>i);render();if(next>=0)openPicker(next)});
+    list.innerHTML=items.map(a=>`<button class="opt ${S.picks[cur]===a.id?'sel':''} ${last===a.id&&S.picks[cur]!==a.id?'last':''}" data-id="${esc(a.id)}">${iconSVG(a,S.view==='grid'?40:32)}<span class="nm">${esc(a.name)}</span><span class="c">${label(a)}</span>${last===a.id?'<span class="lasttag">last year</span>':''}</button>`).join('')||`<p class="muted" style="padding:10px;margin:0">${searchAssets(s).length?`“${esc(s)}” wasn't trading in ${year}.`:`Nothing matches “${esc(s)}”. Try a company, a ticker or a commodity.`}</p>`;
+    if(keepId!==undefined){const el=keepId&&list.querySelector(`.opt[data-id="${CSS.escape(keepId)}"]`);list.scrollTop=el&&anchorOff!=null?el.offsetTop-anchorOff:prevTop}else list.scrollTop=0;
+    list.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{const id=b.dataset.id;S.picks[cur]=id;progress();render();
+      const next=S.picks.findIndex((x,k)=>!x&&k>cur);
+      if(next>=0)setCard(next,false,id);else{const after=cur+1<g.n?cur+1:-1;if(after>=0)setCard(after,false,id);else closePicker()}});
   };
-  q.oninput=draw;
+  const drawCats=()=>{const year=yearOf(g,cur);
+    catsEl.innerHTML=CATS.map(c=>{const n=c==='Popular'?POPULAR.filter(id=>OK.has(id)).length:c==='All'?AVAIL.length:AVAIL.filter(a=>a.cat===c).length;return `<button class="cat ${S.catSel===c?'on':''}" data-c="${c}" role="tab" aria-selected="${S.catSel===c}" ${n?'':'disabled'}>${c}<span class="n">${n}</span></button>`}).join('');
+    catsEl.querySelectorAll('.cat').forEach(b=>b.onclick=()=>{S.catSel=b.dataset.c;q.value='';drawCats();draw()})};
+  // Switch to another card without closing: same tab, same search, same scroll.
+  function setCard(k,jump,keepId){cur=k;const year=yearOf(g,k),lucky=g.lucky[k]==='1';
+    AVAIL=ASSETS.filter(a=>row(a,year));OK=new Set(AVAIL.map(a=>a.id));
+    bg.querySelector('.sheet').setAttribute('aria-label','Pick for '+year);
+    bg.querySelector('#pk-year').textContent=year;bg.querySelector('#pk-year').classList.remove('bump');void bg.offsetWidth;bg.querySelector('#pk-year').classList.add('bump');
+    bg.querySelector('#pk-eb').textContent=(lucky?'Lucky year · best entry and exit':'Bet your fortune on')+' · '+AVAIL.length+' trading';
+    bg.querySelector('#pk-prev').disabled=k===0;bg.querySelector('#pk-next').disabled=k===g.n-1;
+    drawYears();drawCats();draw(jump?(S.picks[k]||null):(keepId||null));
+  }
+  q.oninput=()=>draw();
+  bg.querySelector('#pk-prev').onclick=()=>{if(cur>0)setCard(cur-1,true)};
+  bg.querySelector('#pk-next').onclick=()=>{if(cur<g.n-1)setCard(cur+1,true)};
   bg.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{S.view=b.dataset.v;store('hs-view',S.view);bg.querySelectorAll('.seg button').forEach(x=>{x.classList.toggle('on',x===b);x.setAttribute('aria-pressed',x===b)});draw()});
-  bg.querySelectorAll('.cat').forEach(b=>b.onclick=()=>{S.catSel=b.dataset.c;q.value='';bg.querySelectorAll('.cat').forEach(x=>{x.classList.toggle('on',x===b);x.setAttribute('aria-selected',x===b)});draw()});
   bg.querySelector('#pk-close').onclick=closePicker;
   bg.onclick=e=>{if(e.target===bg)closePicker()};
   bg.onkeydown=e=>{if(e.key==='Escape')closePicker();if(e.key==='Enter'&&e.target===q){const f=list.querySelector('.opt');if(f)f.click()}};
-  draw();if(matchMedia('(pointer:fine)').matches)setTimeout(()=>q.focus({preventScroll:true}),50);
+  setCard(i,true);if(matchMedia('(pointer:fine)').matches)setTimeout(()=>q.focus({preventScroll:true}),50);
 }
 function closePicker(){if(pickerEl){pickerEl.remove();pickerEl=null}}
 
 // ---------- reveal ----------
+// ---------- shared reveal clock ----------
+// Every player draws the reveal from the same timeline: a start time and a list of speed changes,
+// all stamped by the server's clock. Each browser converts the server time to its own with a
+// measured offset, so cards flip at the same moment everywhere whatever the local clock says.
+let CLOCK_OFFSET=0;
+async function syncClock(){
+  if(!SOCK||!SOCK.connected)return;let best=null;
+  for(let k=0;k<5;k++){const t0=Date.now();const r=await new Promise(res=>SOCK.timeout(3000).emit('clock',{},(e,d)=>res(e?null:d)));const t1=Date.now();
+    if(r&&typeof r.now==='number'){const rtt=t1-t0;if(!best||rtt<best.rtt)best={rtt,off:r.now-(t0+t1)/2}}}
+  if(best)CLOCK_OFFSET=best.off;
+}
+const serverNow=()=>Date.now()+(S.mode==='online'?CLOCK_OFFSET:0);
+function ctlFor(g){if(S.mode==='online')return S.ctl&&S.ctl.id===g.id?S.ctl:null;return S.ctlLocal&&S.ctlLocal.id===g.id?S.ctlLocal:null}
+function timelinePos(ctl,now){
+  if(!ctl)return -Infinity;if(ctl.skipAt&&now>=ctl.skipAt)return Infinity;
+  if(now<ctl.t0)return now-ctl.t0;
+  let p=0,t=ctl.t0,sp=1;
+  for(const c of ctl.changes||[]){if(c.at>now)break;const at=Math.max(c.at,t);p+=(at-t)*sp;t=at;sp=c.speed}
+  return p+(now-t)*sp;
+}
+function speedAt(ctl,now){let sp=1;for(const c of (ctl&&ctl.changes)||[]){if(c.at>now)break;sp=c.speed}return sp}
+function sendCtl(g,type,speed){
+  if(S.mode==='online'){if(SOCK&&SOCK.connected)SOCK.emit('ctl',{gameId:g.id,type,speed});return}
+  const c=S.ctlLocal;if(!c||c.id!==g.id)return;const now=Date.now();
+  if(type==='speed')c.changes.push({at:Math.max(now,c.t0),speed});if(type==='skip')c.skipAt=now;
+}
+
+// ---------- reveal ----------
 function stopReveal(){if(S.reveal)S.reveal.dead=true;S.reveal=null}
 function bagHTML(t){return `<svg class="body" viewBox="0 0 100 100"><use href="#bag${t}"/></svg>`}
+// Timeline in "speed 1" milliseconds. Each year: lucky intro, flip, bag hop, ride the chart, settle.
+function buildTimeline(g,lanes){
+  const segs=[];let T=900;
+  for(let i=0;i<g.n;i++){const lucky=g.lucky[i]==='1';const st={i,lucky};
+    const add=(k,d)=>{st[k]={a:T,b:T+d};T+=d};
+    add('intro',lucky?1100:0);add('flip',600+lanes*60);add('hop',560);add('ride',lucky?2300:1800);add('settle',lucky?800:520);
+    segs.push(st)}
+  return {segs,total:T};
+}
 function startReveal(roster,g){
   closePicker();stopReveal();
-  const R={id:g.id,g,roster:roster.map(p=>({...p,sim:simulate(g,p.picks)})),dead:false,step:-1,skip:false};
+  const R={id:g.id,g,roster:roster.map(p=>({...p,sim:simulate(g,p.picks)})),dead:false,fired:new Set(),charts:{},shown:{},done:false,lastYear:null,lastSpeed:null};
   S.reveal=R;S.screen='reveal';
   if(!R.roster.length){toast('Nobody locked in.');S.screen=S.mode==='online'?'table':'home';render();return}
+  R.tl=buildTimeline(g,R.roster.length);
   const compactCls=R.roster.length>3?'compact':'';
   app.innerHTML=`<div class="board-head">
       <div class="stack" style="gap:6px"><span class="eyebrow" id="rv-label">Departing from</span><div class="flap" id="rv-year">${String(g.start).split('').map(d=>`<b>${d}</b>`).join('')}</div></div>
-      <div class="row"><span class="eyebrow">Speed</span>${[1,2,4].map(s=>`<button class="btn small ${S.speed===s?'primary':''}" data-sp="${s}">${s}×</button>`).join('')}<button class="btn small ghost" id="rv-skip">Skip to results</button></div>
+      <div class="row"><span class="eyebrow">Speed${S.mode==='online'?' · everyone':''}</span>${[1,2,4].map(s=>`<button class="btn small" data-sp="${s}">${s}×</button>`).join('')}<button class="btn small ghost" id="rv-skip">Skip to results</button></div>
     </div>
     <div class="reveal ${compactCls}" id="lanes">${R.roster.map((p,pi)=>`<section class="lane" data-p="${pi}">
       <div class="lane-h"><span class="who"><span class="dot" style="background:${p.color}"></span>${esc(p.nick)}${p.me?' (you)':''}</span><span class="amt" id="amt-${pi}">${full(g.cash)}</span></div>
       <div class="strip" id="strip-${pi}"><div class="track">
         <div class="bag" id="bag-${pi}" style="left:0"><div class="bagwrap">${bagHTML(tier(g.cash))}</div><span class="tag" id="tag-${pi}">${compact(g.cash)}</span></div>
         <div class="card start open cur" id="c-${pi}-s"><div class="in">${cardBack(g.start,false)}<div class="face front" style="background:var(--amber)"><span class="tk" style="color:#5a3a06">YEAR ONE</span><span class="yr">${g.start}</span><span class="aname">Lump sum</span><span class="mult" style="color:#1b1306;opacity:1">${full(g.cash)}</span></div></div></div>
-        ${p.sim.steps.map(s=>`<div class="card ${s.lucky?'lucky':''}" id="c-${pi}-${s.i}"><div class="in">${cardBack(s.year,s.lucky)}${frontHTML(s)}</div></div>`).join('')}
+        ${p.sim.steps.map(s=>`<div class="card ${s.lucky?'lucky':''}" id="c-${pi}-${s.i}"><div class="in" style="transition-delay:${pi*70}ms">${cardBack(s.year,s.lucky)}${frontHTML(s)}</div></div>`).join('')}
       </div></div></section>`).join('')}</div>
     <div id="rv-results"></div>`;
-  app.querySelectorAll('[data-sp]').forEach(b=>b.onclick=()=>{S.speed=+b.dataset.sp;app.querySelectorAll('[data-sp]').forEach(x=>x.classList.toggle('primary',x===b))});
-  app.querySelector('#rv-skip').onclick=()=>{R.skip=true};
-  runReveal(R);
+  R.lanes=R.roster.map((p,pi)=>({p,pi,strip:document.getElementById('strip-'+pi),bag:document.getElementById('bag-'+pi),amt:document.getElementById('amt-'+pi),tag:document.getElementById('tag-'+pi),tier:tier(g.cash),bagAt:-1,money:null}));
+  app.querySelectorAll('[data-sp]').forEach(b=>b.onclick=()=>sendCtl(g,'speed',+b.dataset.sp));
+  app.querySelector('#rv-skip').onclick=()=>sendCtl(g,'skip');
+  const loop=()=>{if(R.dead)return;frame(R);if(!R.done)requestAnimationFrame(loop)};requestAnimationFrame(loop);
 }
 function frontHTML(s){
   const a=s.a,cls=s.kind==='fail'||s.kind==='hold'?'flat':s.mult>=1?'up':'down';
@@ -712,6 +792,55 @@ function frontHTML(s){
     <span class="px">${esc(line)}</span>
     <span class="mult ${cls}">${s.kind==='fail'?'×1.00':'×'+(s.mult>=100?s.mult.toFixed(0):s.mult.toFixed(2))} <small>${s.kind==='fail'?'':pct(s.mult)}</small></span>${s.kind==='fail'?'<div class="stamp">FAIL</div>':''}</div>`;
 }
+// Draws the reveal for timeline position p. Idempotent: any p gives the same picture, so late joiners,
+// speed changes and skips all land on the same state as everyone else. One-off effects (coins, the
+// lucky banner, the hop) only fire while p is inside their segment.
+function frame(R){
+  const g=R.g,ctl=ctlFor(g),now=serverNow(),p=timelinePos(ctl,now),{segs,total}=R.tl;
+  // speed buttons reflect the shared speed
+  const sp=ctl?speedAt(ctl,now):1;if(sp!==R.lastSpeed){R.lastSpeed=sp;app.querySelectorAll('[data-sp]').forEach(b=>b.classList.toggle('primary',+b.dataset.sp===sp))}
+  document.documentElement.style.setProperty('--rv-speed',String(sp));
+  if(p<0){if(R.lastYear!==g.start){R.lastYear=g.start;setYear(g.start,'Departing from')}return}
+  const once=(key,seg,fn)=>{if(R.fired.has(key))return;R.fired.add(key);if(seg&&p<seg.b&&p!==Infinity)fn()};
+  const w=cardStep();
+  let curStep=-1;
+  for(const st of segs){if(p>=st.intro.a)curStep=st.i}
+  if(curStep>=0){const st=segs[curStep];const y=yearOf(g,curStep);const lbl=p>=total?'Arrived':st.lucky?'Lucky year':'Now trading';
+    if(R.lastYear!==y+lbl){R.lastYear=y+lbl;setYear(y,lbl)}}
+  for(const st of segs){const i=st.i;if(p<st.intro.a)break;
+    const live=p<st.settle.b;
+    once(i+':scroll',st.intro,()=>R.lanes.forEach(L=>L.strip.scrollTo({left:Math.max(0,(i+1)*w-w*1.3),behavior:'smooth'})));
+    if(!live&&!R.fired.has(i+':scroll')){R.fired.add(i+':scroll')}
+    if(st.lucky)once(i+':lucky',st.intro,()=>{const t=document.createElement('div');t.className='toast-lucky';t.textContent='LUCKY '+yearOf(g,i);document.body.appendChild(t);setTimeout(()=>t.remove(),1400)});
+    R.lanes.forEach(L=>{const card=document.getElementById(`c-${L.pi}-${i}`);if(!card)return;
+      card.classList.toggle('shake',st.lucky&&p>=st.intro.a&&p<st.intro.b);
+      if(p>=st.flip.a)card.classList.add('open');
+      if(p>=st.hop.a&&L.bagAt<i){L.bagAt=i;
+        document.querySelectorAll(`[id^="c-${L.pi}-"]`).forEach(c=>c.classList.remove('cur'));card.classList.add('cur');
+        L.bag.style.left=((i+1)*w)+'px';
+        if(p<st.hop.b){L.bag.classList.remove('hop');void L.bag.offsetWidth;L.bag.classList.add('hop')}}
+      const s=L.p.sim.steps[i];
+      if(p>=st.ride.a){
+        const key=L.pi+':'+i;if(!(key in R.charts))R.charts[key]=buildChart(card,s);const play=R.charts[key];
+        const k=Math.min(1,(p-st.ride.a)/(st.ride.b-st.ride.a)),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+        let m;
+        if(k>=1){if(play)play(1);m=s.after;if(!card.classList.contains('done')){card.classList.add('done');card.classList.toggle('loss',s.mult<1);card.classList.remove('falling')}}
+        else if(play)m=play(e);
+        else m=s.kind==='normal'||s.kind==='lucky'?Math.exp(Math.log(s.before)+(Math.log(s.after)-Math.log(s.before))*e):s.after;
+        L.money=m;L.moneyStep=i;L.riding=k<1;
+      }
+      if(p>=st.settle.a){const nt=tier(s.after);
+        if(nt!==L.tier){L.tier=nt;L.bag.querySelector('.bagwrap').innerHTML=bagHTML(nt);
+          once(L.pi+':'+i+':morph',st.settle,()=>{L.bag.classList.remove('morph');void L.bag.offsetWidth;L.bag.classList.add('morph');coins(L.bag,22)})}
+        else if(s.mult>=1.5)once(L.pi+':'+i+':coins',st.settle,()=>coins(L.bag,Math.min(16,Math.round(s.mult*3))))}
+    });
+  }
+  R.lanes.forEach(L=>{const m=L.money==null?g.cash:L.money;if(R.shown[L.pi]!==m){R.shown[L.pi]=m;L.amt.textContent=full(m);L.tag.textContent=compact(m)}
+    const before=L.moneyStep!=null?L.p.sim.steps[L.moneyStep].before:g.cash;
+    L.amt.classList.toggle('dn',!!L.riding&&m<before);L.amt.classList.toggle('upc',!!L.riding&&m>before)});
+  if(p>=total&&!R.done){R.done=true;R.lanes.forEach(L=>L.amt.classList.remove('dn','upc'));setYear(yearOf(g,g.n-1),'Arrived');showResults(R)}
+}
+function cardStep(){const c=document.getElementById('c-0-s');if(!c)return 160;const gap=parseFloat(getComputedStyle(c.parentElement).columnGap)||12;return c.getBoundingClientRect().width+gap}
 
 // Price path for one asset-year: points {x:0..1, p:price}, plus lucky buy/sell positions.
 const B64='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
@@ -767,60 +896,13 @@ function rollNumber(el,tagEl,from,to,ms){
       if(el)el.textContent=full(v);if(tagEl)tagEl.textContent=compact(v);if(k<1)requestAnimationFrame(f);else res()};requestAnimationFrame(f)})}
 function coins(bag,n){const r=bag.getBoundingClientRect();for(let i=0;i<n;i++){const c=document.createElement('div');c.className='coin';c.style.position='fixed';c.style.left=(r.left+r.width/2-6)+'px';c.style.top=(r.top+r.height*0.55)+'px';document.body.appendChild(c);
   const dx=(Math.random()-.5)*160,dy=-60-Math.random()*90;c.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:`translate(${dx*.6}px,${dy}px) scale(1.1)`,opacity:1,offset:.45},{transform:`translate(${dx}px,${dy+130}px) scale(.7)`,opacity:0}],{duration:900+Math.random()*400,easing:'cubic-bezier(.2,.7,.4,1)'}).onfinish=()=>c.remove()}}
-// Runs every lane's chart together; the lane total and bag tag follow the rider.
-function rideCharts(lanes,i,ms,R){
-  const plays=lanes.map((L,pi)=>{const s=L.p.sim.steps[i];const card=document.getElementById(`c-${pi}-${i}`);return {L,s,card,play:buildChart(card,s)}});
-  if(R.skip){plays.forEach(o=>{if(o.play)o.play(1);o.card.classList.add('done');o.card.classList.toggle('loss',o.s.mult<1);o.card.classList.remove('falling');o.L.amt.textContent=full(o.s.after);o.L.tag.textContent=compact(o.s.after)});return Promise.resolve()}
-  return new Promise(res=>{const t0=performance.now();
-    const f=t=>{if(R.dead)return res();const k=Math.min(1,(t-t0)/ms),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
-      plays.forEach(o=>{let m;
-        if(o.play)m=o.play(e);
-        else m=o.s.kind==='normal'||o.s.kind==='lucky'?Math.exp(Math.log(o.s.before)+(Math.log(o.s.after)-Math.log(o.s.before))*e):o.s.after;
-        o.L.amt.textContent=full(m);o.L.tag.textContent=compact(m);
-        o.L.amt.classList.toggle('dn',m<o.s.before);o.L.amt.classList.toggle('upc',m>o.s.before)});
-      if(k<1)requestAnimationFrame(f);else{plays.forEach(o=>{o.card.classList.add('done');o.card.classList.toggle('loss',o.s.mult<1);o.card.classList.remove('falling');o.L.amt.textContent=full(o.s.after);o.L.tag.textContent=compact(o.s.after)});res()}};
-    requestAnimationFrame(f)});
-}
-async function runReveal(R){
-  const g=R.g,wait=Math.max(0,(g.revealAt||0)-Date.now());
-  const W=ms=>R.skip?Promise.resolve():sleep(ms/S.speed);
-  if(wait>0&&!R.skip){setYear(g.start,'Departing from');await sleep(Math.min(wait,6000))}
-  const lanes=R.roster.map((p,pi)=>({p,strip:document.getElementById('strip-'+pi),bag:document.getElementById('bag-'+pi),amt:document.getElementById('amt-'+pi),tag:document.getElementById('tag-'+pi),money:g.cash,tier:tier(g.cash)}));
-  const cw=()=>{const c=document.getElementById('c-0-s');const gap=parseFloat(getComputedStyle(c.parentElement).columnGap)||12;return c?c.getBoundingClientRect().width+gap:160};
-  await W(700);
-  for(let i=0;i<g.n;i++){
-    if(R.dead)return;R.step=i;const year=yearOf(g,i),lucky=g.lucky[i]==='1';
-    setYear(year,lucky?'Lucky year':'Now trading');
-    const w=cw();
-    lanes.forEach(L=>{L.strip.scrollTo({left:Math.max(0,(i+1)*w-w*1.3),behavior:R.skip?'auto':'smooth'})});
-    if(lucky&&!R.skip){const t=document.createElement('div');t.className='toast-lucky';t.textContent='LUCKY '+year;document.body.appendChild(t);setTimeout(()=>t.remove(),1400);
-      lanes.forEach((L,pi)=>document.getElementById(`c-${pi}-${i}`).classList.add('shake'));await W(1100)}
-    // flip every lane's card, then hop the bag onto it
-    lanes.forEach((L,pi)=>{const c=document.getElementById(`c-${pi}-${i}`);setTimeout(()=>c&&c.classList.add('open'),R.skip?0:pi*90/S.speed)});
-    await W(600+lanes.length*60);
-    lanes.forEach((L,pi)=>{document.querySelectorAll(`[id^="c-${pi}-"]`).forEach(c=>c.classList.remove('cur'));const c=document.getElementById(`c-${pi}-${i}`);c&&c.classList.add('cur');
-      L.bag.style.left=((i+1)*w)+'px';L.bag.classList.remove('hop');void L.bag.offsetWidth;L.bag.classList.add('hop')});
-    await W(560);
-    // the year plays out on the chart; money rides the line
-    await rideCharts(lanes,i,(lucky?2300:1800)/S.speed,R);
-    if(R.dead)return;
-    lanes.forEach(L=>{const s=L.p.sim.steps[i];L.money=s.after;
-      const nt=tier(L.money);if(nt!==L.tier){L.tier=nt;L.bag.querySelector('.bagwrap').innerHTML=bagHTML(nt);L.bag.classList.remove('morph');void L.bag.offsetWidth;L.bag.classList.add('morph');if(!R.skip)coins(L.bag,22)}
-      else if(s.mult>=1.5&&!R.skip)coins(L.bag,Math.min(16,Math.round(s.mult*3)))});
-    await W(lucky?800:520);
-  }
-  if(R.dead)return;
-  lanes.forEach(L=>{L.amt.classList.remove('dn','upc')});
-  setYear(yearOf(g,g.n-1),'Arrived');
-  showResults(R);
-}
 function showResults(R){
   const g=R.g,box=document.getElementById('rv-results');if(!box)return;
   const ranked=R.roster.map(p=>{const st=p.sim.steps;const best=st.reduce((b,s)=>s.mult>(b?b.mult:0)?s:b,null);const fails=st.filter(s=>s.kind==='fail').length;return {...p,final:p.sim.final,best,fails}}).sort((a,b)=>b.final-a.final);
   const perf=perfect(g);
   box.innerHTML=`<section class="stack" style="margin-top:28px;gap:16px">
     <div class="row" style="justify-content:space-between"><h2 style="font-size:clamp(36px,6vw,58px)">Final ledger</h2>
-      <div class="row">${S.mode==='online'?(S.isHost?`<button class="btn primary" id="again">Deal again</button><button class="btn" id="settings">Change settings</button>`:`<span class="muted">The host can deal another round.</span>`)+`<button class="btn ghost" id="leave2">Leave table</button>`:`<button class="btn primary" id="again">Play again</button><button class="btn" id="home">Main menu</button>`}</div></div>
+      <div class="row">${S.mode==='online'?(S.isHost?`<button class="btn primary" id="again">Deal again</button><button class="btn" id="settings">Back to table</button>`:`<button class="btn primary" id="totable">Back to table</button><span class="muted">The host deals the next round.</span>`)+`<button class="btn ghost" id="leave2">Leave table</button>`:`<button class="btn primary" id="again">Play again</button><button class="btn" id="lsetup">Change players</button><button class="btn ghost" id="home">Main menu</button>`}</div></div>
     <div class="podium">${ranked.map((p,k)=>`<div class="place ${k===0?'first':''}"><span class="rank">${k+1}</span><svg viewBox="0 0 100 100" width="64" height="64" aria-hidden="true"><use href="#bag${tier(p.final)}"/></svg>
       <div style="min-width:0"><div style="font-weight:600"><span class="dot" style="background:${p.color}"></span>${esc(p.nick)}${p.me?' (you)':''}</div>
       <div class="sub">${p.best&&p.best.mult>1?`Best call: ${esc(p.best.a?p.best.a.name:'')} in ${p.best.year} (${pct(p.best.mult)})`:'No winning years'}${p.fails?` · ${p.fails} fail${p.fails>1?'s':''}`:''}</div></div>
@@ -837,6 +919,11 @@ function showResults(R){
     else{S.game=genGame(S.cfg,(Math.random()*2**31)|0||7);S.local.players.forEach(p=>p.picks=null);S.local.turn=0;stopReveal();S.screen='handoff';render()}};
   const st=box.querySelector('#settings');if(st)st.onclick=()=>{S.game={phase:'setup',cfg:S.game.cfg||S.cfg,id:0};stopReveal();S.screen='table';setP({game:S.game});advertise();render()};
   const lv=box.querySelector('#leave2');if(lv)lv.onclick=leaveTable;
+  const tt=box.querySelector('#totable');if(tt)tt.onclick=backToTable;
+  const ls=box.querySelector('#lsetup');if(ls)ls.onclick=()=>{stopReveal();S.screen='local';render()};
+  // the top of the board gets the same way back, so nobody has to scroll for it
+  const top=document.getElementById('rv-skip');if(top){const b=top.cloneNode(false);b.textContent=S.mode==='online'?(S.isHost?'Deal again':'Back to table'):'Play again';b.className='btn small primary';top.replaceWith(b);
+    b.onclick=()=>{const x=box.querySelector(S.mode==='online'&&!S.isHost?'#totable':'#again');if(x)x.click()}}
   const hm=box.querySelector('#home');if(hm)hm.onclick=()=>{stopReveal();S.screen='home';S.mode=null;render()};
 }
 render();
