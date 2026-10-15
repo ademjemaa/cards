@@ -342,10 +342,17 @@ function perfect(g){
 }
 
 // ---------- formatting ----------
-const UNITS=[[1e15,'Q'],[1e12,'T'],[1e9,'B'],[1e6,'M'],[1e3,'K']];
-function compact(v){for(const[u,s]of UNITS)if(v>=u){const x=v/u;return '$'+(x>=100?x.toFixed(0):x>=10?x.toFixed(1):x.toFixed(2))+s}return '$'+v.toFixed(v<10?2:0)}
-function full(v){if(v>=1e15)return compact(v);return '$'+Math.round(v).toLocaleString('en-US')}
-function pct(x){const p=(x-1)*100;return (p>=0?'+':'')+(Math.abs(p)>=1000?Math.round(p).toLocaleString('en-US'):p.toFixed(Math.abs(p)<10?1:0))+'%'}
+// Money reads as plain dollars up to a billion, then $12.4B / $3.1T, then powers of ten ($4.7 × 10¹⁸)
+// once the named units run out. Bag tags use the short "e" form (4.7e18) to stay narrow.
+const UNITS=[[1e12,'T'],[1e9,'B'],[1e6,'M'],[1e3,'K']];
+const SUP={'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','-':'⁻'};
+function sci(v,d=2){let e=Math.floor(Math.log10(v)),m=v/Math.pow(10,e);if(+m.toFixed(d)>=10){m=1;e++}return {m:m.toFixed(d),e:String(e)}}
+function sup(n){return String(n).split('').map(c=>SUP[c]||c).join('')}
+function three(x){return x>=100?x.toFixed(0):x>=10?x.toFixed(1):x.toFixed(2)}
+function compact(v){if(v>=1e15){const {m,e}=sci(v,1);return '$'+m+'e'+e}if(v>=999.5e12){const {m,e}=sci(v,1);return '$'+m+'e'+e}for(const[u,s]of UNITS)if(v>=u*0.9995)return '$'+three(v/u)+s;return '$'+v.toFixed(v<10?2:0)}
+function full(v){if(v>=999.5e12){const {m,e}=sci(v,2);return '$'+m+' × 10'+sup(e)}if(v>=1e9)return compact(v);return '$'+Math.round(v).toLocaleString('en-US')}
+function multFmt(x){if(x>=1e4){const {m,e}=sci(x,1);return '×'+m+' × 10'+sup(e)}if(x>=100)return '×'+Math.round(x).toLocaleString('en-US');return '×'+x.toFixed(2)}
+function pct(x){if(x>=100)return '';const p=(x-1)*100;return (p>=0?'+':'')+(Math.abs(p)>=1000?Math.round(p).toLocaleString('en-US'):p.toFixed(Math.abs(p)<10?1:0))+'%'}
 function px(v){return v>=1000?v.toLocaleString('en-US',{maximumFractionDigits:0}):v>=1?v.toFixed(2):v.toPrecision(3)}
 function tier(v){return v>=1e12?3:v>=1e9?2:v>=1e6?1:0}
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -779,6 +786,7 @@ function startReveal(roster,g){
       </div></div></section>`).join('')}</div>
     <div id="rv-results"></div>`;
   R.lanes=R.roster.map((p,pi)=>({p,pi,strip:document.getElementById('strip-'+pi),bag:document.getElementById('bag-'+pi),amt:document.getElementById('amt-'+pi),tag:document.getElementById('tag-'+pi),tier:tier(g.cash),bagAt:-1,money:null}));
+  R.lanes.forEach(L=>['wheel','touchstart','pointerdown','keydown'].forEach(ev=>L.strip.addEventListener(ev,()=>{L.userAt=performance.now()},{passive:true})));
   app.querySelectorAll('[data-sp]').forEach(b=>b.onclick=()=>sendCtl(g,'speed',+b.dataset.sp));
   app.querySelector('#rv-skip').onclick=()=>sendCtl(g,'skip');
   const loop=()=>{if(R.dead)return;frame(R);if(!R.done)requestAnimationFrame(loop)};requestAnimationFrame(loop);
@@ -790,7 +798,7 @@ function frontHTML(s){
   return `<div class="face front">${s.lucky?'<span class="badge-lucky">LUCKY</span>':''}<span class="fh">${iconSVG(a||BY_ID.cash,22)}<span class="tk">${a&&a.id!=='cash'?esc(tickerLabel(a)):'CASH'}</span></span><span class="yr">${s.year}</span><span class="aname">${esc(name)}</span>
     <div class="spark ${s.kind}">${s.kind==='normal'||s.kind==='lucky'?'':`<svg viewBox="0 0 120 52" preserveAspectRatio="none"><line x1="2" y1="26" x2="118" y2="26" class="${s.kind==='fail'?'dash':'flatline'}"/></svg>`}</div>
     <span class="px">${esc(line)}</span>
-    <span class="mult ${cls}">${s.kind==='fail'?'×1.00':'×'+(s.mult>=100?s.mult.toFixed(0):s.mult.toFixed(2))} <small>${s.kind==='fail'?'':pct(s.mult)}</small></span>${s.kind==='fail'?'<div class="stamp">FAIL</div>':''}</div>`;
+    <span class="mult ${cls}">${s.kind==='fail'?'×1.00':multFmt(s.mult)} <small>${s.kind==='fail'?'':pct(s.mult)}</small></span>${s.kind==='fail'?'<div class="stamp">FAIL</div>':''}</div>`;
 }
 // Draws the reveal for timeline position p. Idempotent: any p gives the same picture, so late joiners,
 // speed changes and skips all land on the same state as everyone else. One-off effects (coins, the
@@ -809,8 +817,6 @@ function frame(R){
     if(R.lastYear!==y+lbl){R.lastYear=y+lbl;setYear(y,lbl)}}
   for(const st of segs){const i=st.i;if(p<st.intro.a)break;
     const live=p<st.settle.b;
-    once(i+':scroll',st.intro,()=>R.lanes.forEach(L=>L.strip.scrollTo({left:Math.max(0,(i+1)*w-w*1.3),behavior:'smooth'})));
-    if(!live&&!R.fired.has(i+':scroll')){R.fired.add(i+':scroll')}
     if(st.lucky)once(i+':lucky',st.intro,()=>{const t=document.createElement('div');t.className='toast-lucky';t.textContent='LUCKY '+yearOf(g,i);document.body.appendChild(t);setTimeout(()=>t.remove(),1400)});
     R.lanes.forEach(L=>{const card=document.getElementById(`c-${L.pi}-${i}`);if(!card)return;
       card.classList.toggle('shake',st.lucky&&p>=st.intro.a&&p<st.intro.b);
@@ -835,6 +841,15 @@ function frame(R){
         else if(s.mult>=1.5)once(L.pi+':'+i+':coins',st.settle,()=>coins(L.bag,Math.min(16,Math.round(s.mult*3))))}
     });
   }
+  // Follow the current card in every row, every frame, so speed changes and skips can't leave a row behind.
+  // A player who scrolls a row by hand gets 3 seconds before it follows again.
+  const tnow=performance.now(),cardW=w-(parseFloat(getComputedStyle(R.lanes[0].strip.firstElementChild).columnGap)||12);
+  R.lanes.forEach(L=>{if(tnow-(L.userAt||0)<3000)return;
+    // keep the previous card in view when there's room, otherwise center the current one
+    const lead=Math.max(0,Math.min(1.3*w,(L.strip.clientWidth-cardW)/2)),target=curStep<0?0:Math.max(0,(curStep+1)*w-lead);
+    const cur=L.strip.scrollLeft,max=L.strip.scrollWidth-L.strip.clientWidth,t=Math.min(target,max),d=t-cur;
+    if(Math.abs(d)>1){L.auto=true;L.strip.scrollLeft=p===Infinity?t:cur+d*Math.min(1,0.12*Math.max(1,sp))}});
+  if(p===Infinity)R.lanes.forEach(L=>{L.bag.style.transition='none'});
   R.lanes.forEach(L=>{const m=L.money==null?g.cash:L.money;if(R.shown[L.pi]!==m){R.shown[L.pi]=m;L.amt.textContent=full(m);L.tag.textContent=compact(m)}
     const before=L.moneyStep!=null?L.p.sim.steps[L.moneyStep].before:g.cash;
     L.amt.classList.toggle('dn',!!L.riding&&m<before);L.amt.classList.toggle('upc',!!L.riding&&m>before)});
